@@ -93,6 +93,16 @@ def main():
     分数 = 0
     分数字体 = pygame.font.Font("字体\SentyMARUKO.ttf",36)
 
+    暂停 = False
+    浅色的暂停键 = pygame.image.load("图片\暂停_浅色.png").convert_alpha()
+    深色的暂停键 = pygame.image.load("图片\暂停_深色.png").convert_alpha()
+    浅色的开始键 = pygame.image.load("图片\开始_浅色.png").convert_alpha()
+    深色的开始键 = pygame.image.load("图片\开始_深色.png").convert_alpha()
+    暂停键的矩形 = 浅色的暂停键.get_rect()
+    暂停键的矩形.left, 暂停键的矩形.top = 宽 - 暂停键的矩形.width - 10, 10
+    暂停键的样式 = 浅色的暂停键
+
+
     切换图片 = True
 
     延迟 = 100
@@ -104,165 +114,185 @@ def main():
             if 事件.type == QUIT:
                 pygame.quit()
                 sys.exit()
+            elif 事件.type == MOUSEBUTTONDOWN:
+                if 事件.button == 1 and 暂停键的矩形.collidepoint(事件.pos):
+                    暂停 = not 暂停
 
-        # 检测用户的键盘操作
-        键盘按下 = pygame.key.get_pressed()
-
-        if 键盘按下[K_w] or 键盘按下[K_UP]:
-            我.向上()
-        if 键盘按下[K_s] or 键盘按下[K_DOWN]:
-            我.向下()
-        if 键盘按下[K_a] or 键盘按下[K_LEFT]:
-            我.向左()
-        if 键盘按下[K_d] or 键盘按下[K_RIGHT]:
-            我.向右()
+            elif 事件.type == MOUSEMOTION:
+                if 暂停键的矩形.collidepoint(事件.pos):
+                    if 暂停:
+                        暂停键的样式 = 深色的开始键
+                    else:
+                        暂停键的样式 = 深色的暂停键
+                else:
+                    if 暂停:
+                        暂停键的样式 = 浅色的开始键
+                    else:
+                        暂停键的样式 = 浅色的暂停键
 
         窗口.blit(背景, (0,0))
 
-        if not(延迟 % 10):
-            子弹1[子弹1索引].重置(我.rect.midtop)
-            子弹1索引 = (子弹1索引 + 1) % 子弹1数量
+        if not 暂停:
+            # 检测用户的键盘操作
+            键盘按下 = pygame.key.get_pressed()
 
-        for 某子弹 in 子弹1:
-            if 某子弹.活着:
-                某子弹.发射()
-                窗口.blit(某子弹.图片,某子弹.rect)
-                打到的敌机 = pygame.sprite.spritecollide(某子弹, 敌机们, False, pygame.sprite.collide_mask)
-                if 打到的敌机:
-                    某子弹.活着 = False
-                    for 某敌机 in 打到的敌机:
-                        if 某敌机 in 打到的敌机:
-                            if 某敌机 in 中敌机 or 某敌机 in 大敌机:
-                                某敌机.被打 = True
-                                某敌机.装甲 -= 1
-                                if 某敌机.装甲 == 0:
+            if 键盘按下[K_w] or 键盘按下[K_UP]:
+                我.向上()
+            if 键盘按下[K_s] or 键盘按下[K_DOWN]:
+                我.向下()
+            if 键盘按下[K_a] or 键盘按下[K_LEFT]:
+                我.向左()
+            if 键盘按下[K_d] or 键盘按下[K_RIGHT]:
+                我.向右()
+
+            #窗口.blit(背景, (0,0))
+
+            if not(延迟 % 10):
+                子弹1[子弹1索引].重置(我.rect.midtop)
+                子弹1索引 = (子弹1索引 + 1) % 子弹1数量
+
+            for 某子弹 in 子弹1:
+                if 某子弹.活着:
+                    某子弹.发射()
+                    窗口.blit(某子弹.图片,某子弹.rect)
+                    打到的敌机 = pygame.sprite.spritecollide(某子弹, 敌机们, False, pygame.sprite.collide_mask)
+                    if 打到的敌机:
+                        某子弹.活着 = False
+                        for 某敌机 in 打到的敌机:
+                            if 某敌机 in 打到的敌机:
+                                if 某敌机 in 中敌机 or 某敌机 in 大敌机:
+                                    某敌机.被打 = True
+                                    某敌机.装甲 -= 1
+                                    if 某敌机.装甲 == 0:
+                                        某敌机.活着 = False
+                                else:
                                     某敌机.活着 = False
-                            else:
-                                某敌机.活着 = False
 
 
-        #绘制大型敌机
-        for 每一个 in 大敌机:
-            if 每一个.活着:
-                每一个.移动()
-                if 每一个.被打:
-                    窗口.blit(每一个.被打时图片, 每一个.rect)
-                    每一个.被打 = False
-                else:
-                    if 切换图片:
-                        窗口.blit(每一个.图片1, 每一个.rect)
+            #绘制大型敌机
+            for 每一个 in 大敌机:
+                if 每一个.活着:
+                    每一个.移动()
+                    if 每一个.被打:
+                        窗口.blit(每一个.被打时图片, 每一个.rect)
+                        每一个.被打 = False
                     else:
-                        窗口.blit(每一个.图片2, 每一个.rect)
-                #绘制血槽
-                pygame.draw.line(窗口,
-                黑,
-                (每一个.rect.left,每一个.rect.top - 5),
-                (每一个.rect.right,每一个.rect.top - 5)
-                ,2)
+                        if 切换图片:
+                            窗口.blit(每一个.图片1, 每一个.rect)
+                        else:
+                            窗口.blit(每一个.图片2, 每一个.rect)
+                    #绘制血槽
+                    pygame.draw.line(窗口,
+                    黑,
+                    (每一个.rect.left,每一个.rect.top - 5),
+                    (每一个.rect.right,每一个.rect.top - 5)
+                    ,2)
 
-                装甲剩余 = 每一个.装甲 / 敌机.大敌机.装甲
-                if 装甲剩余 > 0.2:
-                    装甲颜色 = 绿
+                    装甲剩余 = 每一个.装甲 / 敌机.大敌机.装甲
+                    if 装甲剩余 > 0.2:
+                        装甲颜色 = 绿
+                    else:
+                        装甲颜色 = 红
+                    pygame.draw.line(窗口, 装甲颜色,
+                    (每一个.rect.left, 每一个.rect.top - 5),
+                    (每一个.rect.left + 每一个.rect.width * 装甲剩余,
+                    每一个.rect.top - 5),2)
+
+                    #即将出现音效
+                    if 每一个.rect.bottom == -50:
+                        敌机3出现音效.play(-1)
                 else:
-                    装甲颜色 = 红
-                pygame.draw.line(窗口, 装甲颜色,
-                (每一个.rect.left, 每一个.rect.top - 5),
-                (每一个.rect.left + 每一个.rect.width * 装甲剩余,
-                每一个.rect.top - 5),2)
+                    #毁灭
+                    if not(延迟 % 3):
+                        if 大敌机爆炸索引 == 0:
+                            敌机3爆炸音效.play()
+                        窗口.blit(每一个.摧毁的图片[大敌机爆炸索引], 每一个.rect)
+                        大敌机爆炸索引 = (大敌机爆炸索引 + 1) % 6
+                        if 大敌机爆炸索引 == 0:
+                            敌机3出现音效.stop()
+                            分数 += 10000
+                            每一个.重置()
 
-                #即将出现音效
-                if 每一个.rect.bottom == -50:
-                    敌机3出现音效.play(-1)
-            else:
-                #毁灭
-                if not(延迟 % 3):
-                    if 大敌机爆炸索引 == 0:
-                        敌机3爆炸音效.play()
-                    窗口.blit(每一个.摧毁的图片[大敌机爆炸索引], 每一个.rect)
-                    大敌机爆炸索引 = (大敌机爆炸索引 + 1) % 6
-                    if 大敌机爆炸索引 == 0:
-                        敌机3出现音效.stop()
-                        分数 += 10000
-                        每一个.重置()
+            #绘制中型敌机
+            for 每一个 in 中敌机:
+                if 每一个.活着:
+                    每一个.移动()
+                    if 每一个.被打:
+                        窗口.blit(每一个.被打时图片, 每一个.rect)
+                        每一个.被打 = False
+                    else:
+                        窗口.blit(每一个.图片, 每一个.rect)
 
-        #绘制中型敌机
-        for 每一个 in 中敌机:
-            if 每一个.活着:
-                每一个.移动()
-                if 每一个.被打:
-                    窗口.blit(每一个.被打时图片, 每一个.rect)
-                    每一个.被打 = False
+                    #绘制血槽
+                    pygame.draw.line(窗口,
+                    黑,
+                    (每一个.rect.left,每一个.rect.top - 5),
+                    (每一个.rect.right,每一个.rect.top - 5)
+                    ,2)
+
+                    装甲剩余 = 每一个.装甲 / 敌机.中敌机.装甲
+                    if 装甲剩余 > 0.2:
+                        装甲颜色 = 绿
+                    else:
+                        装甲颜色 = 红
+                    pygame.draw.line(窗口, 装甲颜色,
+                    (每一个.rect.left, 每一个.rect.top - 5),
+                    (每一个.rect.left + 每一个.rect.width * 装甲剩余,
+                    每一个.rect.top - 5),2)
+
                 else:
+                    #毁灭
+                    if not(延迟 % 3):
+                        if 中敌机爆炸索引 == 0:
+                            敌机2爆炸音效.play()
+                        窗口.blit(每一个.摧毁的图片[我自己爆炸索引], 每一个.rect)
+                        我自己爆炸索引 = (我自己爆炸索引 + 1) % 4
+                        if 中敌机爆炸索引 == 0:
+                            分数 += 5000
+                            每一个.重置()
+
+            #绘制小型敌机
+            for 每一个 in 小敌机:
+                if 每一个.活着:
+                    每一个.移动()
                     窗口.blit(每一个.图片, 每一个.rect)
-
-                #绘制血槽
-                pygame.draw.line(窗口,
-                黑,
-                (每一个.rect.left,每一个.rect.top - 5),
-                (每一个.rect.right,每一个.rect.top - 5)
-                ,2)
-
-                装甲剩余 = 每一个.装甲 / 敌机.中敌机.装甲
-                if 装甲剩余 > 0.2:
-                    装甲颜色 = 绿
                 else:
-                    装甲颜色 = 红
-                pygame.draw.line(窗口, 装甲颜色,
-                (每一个.rect.left, 每一个.rect.top - 5),
-                (每一个.rect.left + 每一个.rect.width * 装甲剩余,
-                每一个.rect.top - 5),2)
+                    #毁灭
+                    if not(延迟 % 3):
+                        if 小敌机爆炸索引 == 0:
+                            敌机1爆炸音效.play()
+                        窗口.blit(每一个.摧毁的图片[大敌机爆炸索引], 每一个.rect)
+                        大敌机爆炸索引 = (大敌机爆炸索引 + 1) % 4
+                        if 小敌机爆炸索引 == 0:
+                            分数 += 1000
+                            每一个.重置()
 
+            与敌机碰撞 = pygame.sprite.spritecollide(我, 敌机们, False, pygame.sprite.collide_mask)
+            if 与敌机碰撞:
+                我.活着 = False
+                for 某敌机 in 与敌机碰撞:
+                    某敌机.活着 = False
+
+            #绘制自己
+            if 我.活着:
+                if 切换图片:
+                    窗口.blit(我.图片1, 我.rect)
+                else:
+                    窗口.blit(我.图片2, 我.rect)
             else:
                 #毁灭
+                我炸了音效.play()
                 if not(延迟 % 3):
-                    if 中敌机爆炸索引 == 0:
-                        敌机2爆炸音效.play()
                     窗口.blit(每一个.摧毁的图片[我自己爆炸索引], 每一个.rect)
-                    我自己爆炸索引 = (我自己爆炸索引 + 1) % 4
-                    if 中敌机爆炸索引 == 0:
-                        分数 += 5000
-                        每一个.重置()
-
-        #绘制小型敌机
-        for 每一个 in 小敌机:
-            if 每一个.活着:
-                每一个.移动()
-                窗口.blit(每一个.图片, 每一个.rect)
-            else:
-                #毁灭
-                if not(延迟 % 3):
-                    if 小敌机爆炸索引 == 0:
-                        敌机1爆炸音效.play()
-                    窗口.blit(每一个.摧毁的图片[大敌机爆炸索引], 每一个.rect)
-                    大敌机爆炸索引 = (大敌机爆炸索引 + 1) % 4
-                    if 小敌机爆炸索引 == 0:
-                        分数 += 1000
-                        每一个.重置()
-
-        与敌机碰撞 = pygame.sprite.spritecollide(我, 敌机们, False, pygame.sprite.collide_mask)
-        if 与敌机碰撞:
-            我.活着 = False
-            for 某敌机 in 与敌机碰撞:
-                某敌机.活着 = False
-
-        #绘制自己
-        if 我.活着:
-            if 切换图片:
-                窗口.blit(我.图片1, 我.rect)
-            else:
-                窗口.blit(我.图片2, 我.rect)
-        else:
-            #毁灭
-            我炸了音效.play()
-            if not(延迟 % 3):
-                窗口.blit(每一个.摧毁的图片[我自己爆炸索引], 每一个.rect)
-                我自己爆炸索引 = (大敌机爆炸索引 + 1) % 4
-                if 我自己爆炸索引 == 0:
-                    print("你机没了")
-                    运行中 = False
+                    我自己爆炸索引 = (大敌机爆炸索引 + 1) % 4
+                    if 我自己爆炸索引 == 0:
+                        print("你机没了")
+                        运行中 = False
 
         分数文字 = 分数字体.render("分数 : %s" % str(分数), True, 白)
         窗口.blit(分数文字,(10,5))
+
+        窗口.blit(暂停键的样式,暂停键的矩形)
 
         if not(延迟 % 5):
             切换图片 = not 切换图片

@@ -76,7 +76,7 @@ class 中敌机(pygame.sprite.Sprite):
                 randint(-10 * self.高, -self.高)
 
 class 大敌机(pygame.sprite.Sprite):
-    装甲 = 20
+    装甲 = 50
 
     def __init__(self, 背景尺寸):
         pygame.sprite.Sprite.__init__(self)
