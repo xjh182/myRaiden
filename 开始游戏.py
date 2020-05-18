@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import 我方飞机
 import 敌机
+import 子弹
 import sys
 import traceback
 import os
@@ -35,6 +36,12 @@ pygame.mixer.music.set_volume(0.2)
 敌机3爆炸音效.set_volume(0.5)
 我炸了音效 = pygame.mixer.Sound("音效\我炸了.wav")
 我炸了音效.set_volume(0.2)
+
+黑 = (0,0,0)
+绿 = (0,255,0)
+红 = (255,0,0)
+白 = (255,255,255)
+
 
 def 增加小敌机(小敌机组, 全部敌机组, 数量):
     for 每一个 in range(数量):
@@ -70,12 +77,21 @@ def main():
     大敌机 = pygame.sprite.Group()
     增加大敌机(大敌机, 敌机们, 2)
 
+    子弹1 = []
+    子弹1索引 = 0
+    子弹1数量 = 4
+    for 单枚子弹1 in range(子弹1数量):
+        子弹1.append(子弹.子弹1(我.rect.midtop))
+
     时钟 = pygame.time.Clock()
 
     小敌机爆炸索引 = 0
     中敌机爆炸索引 = 0
     大敌机爆炸索引 = 0
     我自己爆炸索引 = 0
+
+    分数 = 0
+    分数字体 = pygame.font.Font("字体\SentyMARUKO.ttf",36)
 
     切换图片 = True
 
@@ -103,14 +119,57 @@ def main():
 
         窗口.blit(背景, (0,0))
 
+        if not(延迟 % 10):
+            子弹1[子弹1索引].重置(我.rect.midtop)
+            子弹1索引 = (子弹1索引 + 1) % 子弹1数量
+
+        for 某子弹 in 子弹1:
+            if 某子弹.活着:
+                某子弹.发射()
+                窗口.blit(某子弹.图片,某子弹.rect)
+                打到的敌机 = pygame.sprite.spritecollide(某子弹, 敌机们, False, pygame.sprite.collide_mask)
+                if 打到的敌机:
+                    某子弹.活着 = False
+                    for 某敌机 in 打到的敌机:
+                        if 某敌机 in 打到的敌机:
+                            if 某敌机 in 中敌机 or 某敌机 in 大敌机:
+                                某敌机.被打 = True
+                                某敌机.装甲 -= 1
+                                if 某敌机.装甲 == 0:
+                                    某敌机.活着 = False
+                            else:
+                                某敌机.活着 = False
+
+
         #绘制大型敌机
         for 每一个 in 大敌机:
             if 每一个.活着:
                 每一个.移动()
-                if 切换图片:
-                    窗口.blit(每一个.图片1, 每一个.rect)
+                if 每一个.被打:
+                    窗口.blit(每一个.被打时图片, 每一个.rect)
+                    每一个.被打 = False
                 else:
-                    窗口.blit(每一个.图片2, 每一个.rect)
+                    if 切换图片:
+                        窗口.blit(每一个.图片1, 每一个.rect)
+                    else:
+                        窗口.blit(每一个.图片2, 每一个.rect)
+                #绘制血槽
+                pygame.draw.line(窗口,
+                黑,
+                (每一个.rect.left,每一个.rect.top - 5),
+                (每一个.rect.right,每一个.rect.top - 5)
+                ,2)
+
+                装甲剩余 = 每一个.装甲 / 敌机.大敌机.装甲
+                if 装甲剩余 > 0.2:
+                    装甲颜色 = 绿
+                else:
+                    装甲颜色 = 红
+                pygame.draw.line(窗口, 装甲颜色,
+                (每一个.rect.left, 每一个.rect.top - 5),
+                (每一个.rect.left + 每一个.rect.width * 装甲剩余,
+                每一个.rect.top - 5),2)
+
                 #即将出现音效
                 if 每一个.rect.bottom == -50:
                     敌机3出现音效.play(-1)
@@ -123,13 +182,36 @@ def main():
                     大敌机爆炸索引 = (大敌机爆炸索引 + 1) % 6
                     if 大敌机爆炸索引 == 0:
                         敌机3出现音效.stop()
+                        分数 += 10000
                         每一个.重置()
 
         #绘制中型敌机
         for 每一个 in 中敌机:
             if 每一个.活着:
                 每一个.移动()
-                窗口.blit(每一个.图片, 每一个.rect)
+                if 每一个.被打:
+                    窗口.blit(每一个.被打时图片, 每一个.rect)
+                    每一个.被打 = False
+                else:
+                    窗口.blit(每一个.图片, 每一个.rect)
+
+                #绘制血槽
+                pygame.draw.line(窗口,
+                黑,
+                (每一个.rect.left,每一个.rect.top - 5),
+                (每一个.rect.right,每一个.rect.top - 5)
+                ,2)
+
+                装甲剩余 = 每一个.装甲 / 敌机.中敌机.装甲
+                if 装甲剩余 > 0.2:
+                    装甲颜色 = 绿
+                else:
+                    装甲颜色 = 红
+                pygame.draw.line(窗口, 装甲颜色,
+                (每一个.rect.left, 每一个.rect.top - 5),
+                (每一个.rect.left + 每一个.rect.width * 装甲剩余,
+                每一个.rect.top - 5),2)
+
             else:
                 #毁灭
                 if not(延迟 % 3):
@@ -138,6 +220,7 @@ def main():
                     窗口.blit(每一个.摧毁的图片[我自己爆炸索引], 每一个.rect)
                     我自己爆炸索引 = (我自己爆炸索引 + 1) % 4
                     if 中敌机爆炸索引 == 0:
+                        分数 += 5000
                         每一个.重置()
 
         #绘制小型敌机
@@ -153,13 +236,14 @@ def main():
                     窗口.blit(每一个.摧毁的图片[大敌机爆炸索引], 每一个.rect)
                     大敌机爆炸索引 = (大敌机爆炸索引 + 1) % 4
                     if 小敌机爆炸索引 == 0:
+                        分数 += 1000
                         每一个.重置()
 
-        与敌人碰撞 = pygame.sprite.spritecollide(我, 敌机们, False, pygame.sprite.collide_mask)
-        if 与敌人碰撞:
-            我.活着 = True
-            for 敌人 in 与敌人碰撞:
-                敌人.活着 = False
+        与敌机碰撞 = pygame.sprite.spritecollide(我, 敌机们, False, pygame.sprite.collide_mask)
+        if 与敌机碰撞:
+            我.活着 = False
+            for 某敌机 in 与敌机碰撞:
+                某敌机.活着 = False
 
         #绘制自己
         if 我.活着:
@@ -176,6 +260,9 @@ def main():
                 if 我自己爆炸索引 == 0:
                     print("你机没了")
                     运行中 = False
+
+        分数文字 = 分数字体.render("分数 : %s" % str(分数), True, 白)
+        窗口.blit(分数文字,(10,5))
 
         if not(延迟 % 5):
             切换图片 = not 切换图片
