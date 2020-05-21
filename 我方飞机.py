@@ -22,6 +22,7 @@ class 我方飞机(pygame.sprite.Sprite):
                 self.高 - self.rect.height - 60
         self.速度 = 10
         self.活着 = True
+        self.无敌 = False
         self.mask = pygame.mask.from_surface(self.图片1)
 
     def 向上(self):
@@ -47,3 +48,8 @@ class 我方飞机(pygame.sprite.Sprite):
             self.rect.left += self.速度
         else:
             self.rect.left = self.宽 - self.rect.width
+
+    def 重置(self):
+        self.rect.left, self.rect.top = (self.宽 - self.rect.width) // 2 ,self.高 - self.rect.height - 60
+        self.活着 = True
+        self.无敌 = True

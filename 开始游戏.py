@@ -137,6 +137,22 @@ def main():
     超级子弹计时 = USEREVENT + 1
     使用超级子弹 = False
 
+    无敌时间 = USEREVENT + 2
+
+    备用机图片 = pygame.image.load("图片\命.png").convert_alpha()
+    备用机矩形 = 备用机图片.get_rect()
+    备用机数量 = 3
+
+    游戏结束字体 = pygame.font.Font("字体\SentyMARUKO.ttf",48)
+
+    重新开始 = pygame.image.load("图片\重新开始.png").convert_alpha()
+    重新开始的矩形 = 重新开始.get_rect()
+
+    结束游戏 = pygame.image.load("图片\结束游戏.png").convert_alpha()
+    结束游戏的矩形 = 结束游戏.get_rect()
+
+    记录完成 = False
+
     切换图片 = True
 
     延迟 = 100
@@ -191,7 +207,9 @@ def main():
             elif 事件.type == 超级子弹计时:
                 使用超级子弹 = False
                 pygame.time.set_timer(超级子弹计时, 0)
-
+            elif 事件.type == 无敌时间:
+                我.无敌 = False
+                pygame.time.set_timer(无敌时间,0)
 
 
         #根据用户得分增加难度
@@ -229,7 +247,7 @@ def main():
 
         窗口.blit(背景, (0,0))
 
-        if not 暂停:
+        if 备用机数量 and not 暂停:
             # 检测用户的键盘操作
             键盘按下 = pygame.key.get_pressed()
 
@@ -391,7 +409,7 @@ def main():
                             每一个.重置()
 
             与敌机碰撞 = pygame.sprite.spritecollide(我, 敌机们, False, pygame.sprite.collide_mask)
-            if 与敌机碰撞:
+            if 与敌机碰撞 and not 我.无敌:
                 我.活着 = False
                 for 某敌机 in 与敌机碰撞:
                     某敌机.活着 = False
@@ -404,23 +422,73 @@ def main():
                     窗口.blit(我.图片2, 我.rect)
             else:
                 #毁灭
-                我炸了音效.play()
                 if not(延迟 % 3):
-                    窗口.blit(每一个.摧毁的图片[我自己爆炸索引], 每一个.rect)
-                    我自己爆炸索引 = (大敌机爆炸索引 + 1) % 4
                     if 我自己爆炸索引 == 0:
-                        print("你机没了")
-                        运行中 = False
+                        我炸了音效.play()
+                    窗口.blit(每一个.摧毁的图片[我自己爆炸索引], 我.rect)
+                    我自己爆炸索引 = (我自己爆炸索引 + 1) % 4
+                    if 我自己爆炸索引 == 0:
+                        备用机数量 -= 1
+                        我.重置()
+                        pygame.time.set_timer(无敌时间, 3 * 1000)
 
             炸弹文字 = 炸弹字体.render("x %d" % 炸弹数量, True, 白)
             文字矩形 = 炸弹文字.get_rect()
             窗口.blit(炸弹图片,(10, 高 - 10 - 炸弹矩形.height))
             窗口.blit(炸弹文字,(20 + 炸弹矩形.width, 高 - 5 - 文字矩形.height))
 
-        分数文字 = 分数字体.render("分数 : %s" % str(分数), True, 白)
-        窗口.blit(分数文字,(10,5))
+            if 备用机数量:
+                for 备用机 in range(备用机数量):
+                    窗口.blit(备用机图片,
+                    (宽-10-(备用机+1)*备用机矩形.width,
+                    高-10-备用机矩形.height))
+
+            分数文字 = 分数字体.render("分数 : %s" % str(分数), True, 白)
+            窗口.blit(分数文字,(10,5))
+
+        elif 备用机数量 == 0:
+            pygame.mixer.music.stop()
+            pygame.mixer.stop()
+            pygame.time.set_timer(补给计时,0)
+
+            if not 记录完成:
+                记录完成 = True
+                with open("历史最高分.txt","r") as 文件:
+                    历史最高分 = int(文件.read())
+
+                if 分数 > 历史最高分:
+                    with open("历史最高分.txt","w") as 文件:
+                        文件.write(str(分数))
+
+            历史最高分数文字 = 分数字体.render("历史最高分 : %d" % 历史最高分, True ,白)
+            窗口.blit(历史最高分数文字,(50,50))
+
+            游戏结束文字1 = 游戏结束字体.render("你的分数", True, (255,255,255))
+            游戏结束文字1的矩形 = 游戏结束文字1.get_rect()
+            游戏结束文字1的矩形.left, 游戏结束文字1的矩形.top = (宽 - 游戏结束文字1的矩形.width) // 2, 高 // 3
+            窗口.blit(游戏结束文字1,游戏结束文字1的矩形)
+
+            游戏结束文字2 = 游戏结束字体.render(str(分数),True,(255,255,255))
+            游戏结束文字2的矩形 = 游戏结束文字2.get_rect()
+            游戏结束文字2的矩形.left, 游戏结束文字2的矩形.top = (宽 - 游戏结束文字2的矩形.width) // 2, 游戏结束文字1的矩形.bottom + 10
+            窗口.blit(游戏结束文字2,游戏结束文字2的矩形)
+
+            重新开始的矩形.left, 重新开始的矩形.top = (宽 - 重新开始的矩形.width) // 2, 游戏结束文字2的矩形.bottom + 50
+            窗口.blit(重新开始,重新开始的矩形)
+
+            结束游戏的矩形.left, 结束游戏的矩形.top = (宽 - 结束游戏的矩形.width) // 2, 重新开始的矩形.bottom + 10
+            窗口.blit(结束游戏,结束游戏的矩形)
+
+            if pygame.mouse.get_pressed()[0]:
+                鼠标坐标 = pygame.mouse.get_pos()
+                if 重新开始的矩形.left < 鼠标坐标[0] < 重新开始的矩形.right and 重新开始的矩形.top < 鼠标坐标[1] < 重新开始的矩形.bottom:
+                    main()
+                elif 结束游戏的矩形.left < 鼠标坐标[0] < 结束游戏的矩形.right and 结束游戏的矩形.top < 鼠标坐标[1] < 结束游戏的矩形.bottom:
+                    pygame.quit()
+                    sys.exit
 
         窗口.blit(暂停键的样式,暂停键的矩形)
+
 
         if not(延迟 % 5):
             切换图片 = not 切换图片
